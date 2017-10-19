@@ -3,18 +3,38 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+/* todoSpec
+   {
+    text: str,
+    isChecked: bool,
+    toggleCheckbox: (idx) -> void
+   }
+*/
+
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      todos: ["buy milk", "take over world", "eat more veggies"],
+      todos: [
+        {text: "buy milk", isChecked: false, toggleCheckbox: this.toggleCheckbox}
+        {text: "take over the world", isChecked: false, toggleCheckbox: this.toggleCheckbox}
+        {text: "eat more veggies", isChecked: false, toggleCheckbox: this.toggleCheckbox}
+      ],
     }
   }
 
   addTodo = todo => {
-    this.setState({todos: this.state.todos.concat(todo)})
+    this.setState({todos: this.state.todos.concat(
+      {text: todo, isChecked: false, toggleCheckbox: this.toggleCheckbox}
+    )})
   }
-  
+
+  toggleCheckbox = index => {
+    todo_updator = this.state.todos
+    todo_updator[index].isChecked = !todo_updator[index].isChecked
+    this.setState({todos: todo_updator})
+  }
+
   render() {
     return (
       <div className="App">
@@ -56,20 +76,19 @@ class AddTodo extends Component {
 
 const TodoList = ({todos}) => 
   <ol>
-    {todos.map((todoText, index) => 
-        <TodoItem todoText={todoText} key={index} />)
+    {todos.map((todoSpec, index) => 
+        <TodoItem 
+          todoText={todoSpec.text} 
+          isChecked={todoSpec.isChecked}
+          onChange={todoSpec.toggleCheckbox}
+          key={index} 
+        />
+      )
     }
   </ol>
-  
+
 
 class TodoItem extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      isChecked: false,
-    }
-  }
-
   toggleCheckbox = () => {
     this.setState({isChecked: !this.state.isChecked})
   }
@@ -79,8 +98,8 @@ class TodoItem extends Component {
       <li>
         <input 
           type="checkbox"
-          checked={this.state.isChecked}
-          onChange={this.toggleCheckbox}
+          checked={this.props.isChecked} // added isChecked to props, from state
+          onChange={this.props.onChange}
         />
         {this.props.todoText}
       </li>
