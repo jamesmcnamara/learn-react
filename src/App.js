@@ -3,6 +3,9 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+import { Provider, connect } from 'react-redux'
+import { createStore } from 'redux'
+
 /* todoSpec
    {
     text: str,
@@ -11,18 +14,52 @@ import './App.css';
    }
 */
 
-class App extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      todos: [
-        {text: "buy milk", isChecked: false},
-        {text: "take over the world", isChecked: false},
-        {text: "eat more veggies", isChecked: false},
-      ],
+const initialState = global.initialState = {
+    todos: [
+      {text: "buy milk", isChecked: false},
+      {text: "take over the world", isChecked: false},
+      {text: "eat more veggies", isChecked: false},
+    ],
+}
+
+const ADD_TODO = 'ADD_TODO'
+const CHECK_TODO = 'CHECK_TODO'
+const addTodo = global.addTodo = function addTodo(text) {
+  return {
+    type: ADD_TODO,
+    payload: {
+      text,
+      isChecked: false,
     }
   }
+}
 
+const checkTodo = global.checkTodo = function checkTodo(index) {
+  return {
+    type: CHECK_TODO,
+    index,
+  }
+}
+
+const reducer = global.reducer = function reducer(state = initialState, action) {
+  if (action && action.type === ADD_TODO) {
+    return {
+      ...state,
+      todos: state.todos.concat(action.payload)
+    }
+  }
+  if (action && action.type === CHECK_TODO) {
+    const todos = state.todos.slice()
+    todos[action.index].isChecked = !todos[action.index].isChecked 
+    return {
+      ...state,
+      todos,
+    }
+  }
+  return state
+}
+
+class App extends Component {
   addTodo = todo => {
     this.setState({todos: this.state.todos.concat(
       {text: todo, isChecked: false}
@@ -42,8 +79,6 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <AddTodo onAdd={this.addTodo} /> 
-        <TodoList todos={this.state.todos} toggleCheckbox={this.toggleCheckbox} />
       </div>
     );
   }
