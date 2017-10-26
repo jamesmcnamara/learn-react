@@ -16,40 +16,40 @@ class App extends Component {
     super(props)
     this.state = {
       todos: [
-        {text: "buy milk", isChecked: false, toggleCheckbox: this.toggleCheckbox}
-        {text: "take over the world", isChecked: false, toggleCheckbox: this.toggleCheckbox}
-        {text: "eat more veggies", isChecked: false, toggleCheckbox: this.toggleCheckbox}
+        {text: "buy milk", isChecked: false},
+        {text: "take over the world", isChecked: false},
+        {text: "eat more veggies", isChecked: false},
       ],
     }
   }
 
   addTodo = todo => {
     this.setState({todos: this.state.todos.concat(
-      {text: todo, isChecked: false, toggleCheckbox: this.toggleCheckbox}
+      {text: todo, isChecked: false}
     )})
   }
 
   toggleCheckbox = index => {
-    todo_updator = this.state.todos
-    todo_updator[index].isChecked = !todo_updator[index].isChecked
-    this.setState({todos: todo_updator})
+    this.setState({todos: this.state.todos.map((todo, idx) =>
+      idx === index
+      ? {
+          ...todo,
+        isChecked: !todo.isChecked,
+      }
+      : todo)})
   }
 
   render() {
     return (
       <div className="App">
         <AddTodo onAdd={this.addTodo} /> 
-        <TodoList todos={this.state.todos} />
+        <TodoList todos={this.state.todos} toggleCheckbox={this.toggleCheckbox} />
       </div>
     );
   }
 }
 
 class AddTodo extends Component {
-  constructor(props) {
-    super(props)
-    
-  }
 
   onClick = () => {
     this.props.onAdd(this.todoText.value)
@@ -74,13 +74,13 @@ class AddTodo extends Component {
   }
 }
 
-const TodoList = ({todos}) => 
+const TodoList = ({todos, toggleCheckbox}) => 
   <ol>
     {todos.map((todoSpec, index) => 
         <TodoItem 
           todoText={todoSpec.text} 
           isChecked={todoSpec.isChecked}
-          onChange={todoSpec.toggleCheckbox}
+          onChange={() => toggleCheckbox(index)}
           key={index} 
         />
       )
@@ -89,16 +89,12 @@ const TodoList = ({todos}) =>
 
 
 class TodoItem extends Component {
-  toggleCheckbox = () => {
-    this.setState({isChecked: !this.state.isChecked})
-  }
-  
   render() {
     return (
       <li>
         <input 
           type="checkbox"
-          checked={this.props.isChecked} // added isChecked to props, from state
+          checked={this.props.isChecked}
           onChange={this.props.onChange}
         />
         {this.props.todoText}
