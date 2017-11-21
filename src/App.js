@@ -3,8 +3,8 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import { Provider, connect } from 'react-redux'
-import { createStore } from 'redux'
+import { connect } from 'react-redux'
+import { createStore, combineReducers } from 'redux'
 
 /* todoSpec
    {
@@ -14,16 +14,25 @@ import { createStore } from 'redux'
    }
 */
 
+
 const initialState = global.initialState = {
+  auth: {
+    isLoggedIn: true,
+  },
+  todoPage: {
+    currentFilter: null,
     todos: [
       {text: "buy milk", isChecked: false},
       {text: "take over the world", isChecked: false},
       {text: "eat more veggies", isChecked: false},
     ],
+  },
 }
 
 const ADD_TODO = 'ADD_TODO'
 const CHECK_TODO = 'CHECK_TODO'
+const SELECT_FILTER = 'SELECT_FILTER'
+
 const addTodo = global.addTodo = function addTodo(text) {
   return {
     type: ADD_TODO,
@@ -41,7 +50,14 @@ const checkTodo = global.checkTodo = function checkTodo(index) {
   }
 }
 
-const reducer = global.reducer = function reducer(state = initialState, action) {
+const selectFilter = global.selectFilter= function selectFilter(filter) {
+  return {
+    type: SELECT_FILTER,
+    payload: filter,
+  }
+}
+
+const todoPage = global.reducer = function (state = initialState.todoPage, action) {
   if (action && action.type === ADD_TODO) {
     return {
       ...state,
@@ -56,33 +72,68 @@ const reducer = global.reducer = function reducer(state = initialState, action) 
       todos,
     }
   }
+
+  if (action && action.type === SELECT_FILTER) {
+    return {
+      ...state,
+      currentFilter: action.payload,
+    }
+  }
   return state
 }
 
-class App extends Component {
-  addTodo = todo => {
-    this.setState({todos: this.state.todos.concat(
-      {text: todo, isChecked: false}
-    )})
-  }
+function auth(state = initialState.auth, action) {
+  return state
+}
 
-  toggleCheckbox = index => {
-    this.setState({todos: this.state.todos.map((todo, idx) =>
-      idx === index
-      ? {
-          ...todo,
-        isChecked: !todo.isChecked,
-      }
-      : todo)})
-  }
+const availableFilters = [
+  'checked',
+  'unchecked',
+]
 
+const reducer = combineReducers({
+  todoPage,
+  auth,
+})
+
+
+const filterTodos = (todos, filter) => {
+  if (filter) {
+    const flag = filter == 'checked'
+    return todos.filter(todo => todo.isChecked == flag)
+  }
+  return todos
+}
+
+export const store = window.store = createStore(reducer)
+
+const mapStateToProps = ({todoPage: {todos, currentFilter}}) => 
+  ({todos: filterTodos(todos, currentFilter),
+    currentFilter,
+  })
+
+export const App = connect(mapStateToProps)
+(class App extends Component {
   render() {
     return (
       <div className="App">
+        <AddTodo onAdd={(todo) => this.props.dispatch(addTodo(todo))} />
+        {availableFilters.map((filter, idx) =>
+          <Filter 
+            isSelected={filter == this.props.currentFilter}
+            name={filter} 
+            onClick={(filter) => this.props.dispatch(selectFilter(filter))} 
+            key={idx} 
+          />)
+        }
+        <TodoList 
+          todos={this.props.todos} 
+          toggleCheckbox={index => this.props.dispatch(checkTodo(index))} 
+        />
       </div>
     );
   }
-}
+})
 
 class AddTodo extends Component {
 
@@ -138,4 +189,10 @@ class TodoItem extends Component {
   }
 }
 
-export default App;
+function Filter({name, onClick, isSelected}) {
+  return (
+    <div style={{fontWeight: isSelected ? 'bold' : 'normal'}} onClick={() => onClick(name)}>
+      {name}
+    </div>
+  )
+}
